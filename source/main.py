@@ -1,12 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-"""
-Spyder Editor
-
-This is a temporary script file.
-"""
-
 from dirsync import sync
 import os
 import py7zr
@@ -15,6 +9,7 @@ import os.path
 import base64
 import optparse
 
+__version__ = "0.3"
 
 def b64encode(message):    
     message_bytes = message.encode('ascii')
@@ -29,7 +24,7 @@ def b64decode(base64_message):
     return message
 
     
-class Folder:
+class Folder:   
 
     def __init__(self, path):
         self.path = path
@@ -57,7 +52,7 @@ class BackupJob:
 
     def __init__(self,sourceFolder,backupPath,jobName):
         '''
-        
+        Constructor method of the "BackupJob class."
 
         Parameters
         ----------
@@ -125,6 +120,15 @@ class BackupJob:
         self.mantainedBackupNumber = num
 
     def syncronize(self):
+        '''
+        This method uses the default operating system "folder mirroring" technique
+        in order to syncronize source with dest.
+
+        Returns
+        -------
+        None.
+
+        '''
         self.sourceFolder.setMirrorPath(self.syncRoot)
         self.sourceFolder.createMirror()
 
@@ -147,6 +151,15 @@ class BackupJob:
             self.renameMantainedBackups()
 
     def getCurrentBackupNumber(self):
+        '''
+        This method returns the lastest backup number that has been saved.
+
+        Returns
+        -------
+        int
+            last number.
+
+        '''
         a = os.listdir(self.encRoot)
         if not a:
             return -1
@@ -162,16 +175,22 @@ class BackupJob:
                       os.path.join(self.encRoot,self.jobName.replace('_0', '_'+ str(self.getCurrentBackupNumber() + 1) + '.zip'
                       )))
 
-
-##-s "D:\Mie ricerche" -d "G:\\" -j "test" -m 3 -q bWFzdGVya2V5
-
 def main():
+    '''
+    Main method.
+
+    Returns
+    -------
+    None.
+
+    '''
     parser = optparse.OptionParser()
     parser.add_option('-s', '--source', action="store", dest="source", help="Source folder of backup")
     parser.add_option('-d', '--dest', action="store", dest="dest", help="Destination folder of backup")
     parser.add_option('-j', '--jobname', action="store", dest="jobname", help="Name of the job")
     parser.add_option('-m', '--max', action="store", dest="max", help="Maximum mantained backup number")
     parser.add_option('-q', '--password', action="store", dest="password", help="base64 encoded password")
+    
     options, args = parser.parse_args()
     
     Old = Folder(options.source)

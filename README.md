@@ -1,5 +1,14 @@
 # pyBackup
- A simple backup system made with python 3.0
+ A simple backup system made with python 3.0.
+ This tool has been made with the only purpose to "experiment" with python and operating systems functionalities such as backup tools.
+ I'll personally use this tool to make backups on the MEGA remote folder.
+ At this version it does not support FTP transfer but i'll work on it in order to make it more secure and resilient to attacks
+ such as ransomwares.
+
+## Requirements
+dirsync 2.2.5
+py7zr 0.9.7
+
 ## Installation
 This tool needs to be scheduled-run with your operating system task scheduler.
 An example of the command to use is referenced below.
@@ -17,6 +26,21 @@ Example of (Real) command:
 
 '''
 where bWFzdGVya2V5 = masterkey.
+
+Full help:
+
+'''bash
+Options:
+  -h, --help            show this help message and exit
+  -s SOURCE, --source=SOURCE
+                        Source folder of backup
+  -d DEST, --dest=DEST  Destination folder of backup
+  -j JOBNAME, --jobname=JOBNAME
+                        Name of the job
+  -m MAX, --max=MAX     Maximum mantained backup number
+  -q PASSWORD, --password=PASSWORD
+                        base64 encoded password
+'''
 
 ## Contributing
 Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
