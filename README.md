@@ -13,7 +13,7 @@ py7zr 0.9.7
 This tool needs to be scheduled-run with your operating system task scheduler.
 An example of the command to use is referenced below.
 
-##Usage
+## Usage
 
 ```console
 backup_tool.py -s "C:\\Source" -d "G:\\Destfolder" -j "JobName" -m MantainedBackupNumbers -q base64encodedPassword
