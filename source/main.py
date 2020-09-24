@@ -8,8 +8,10 @@ import shutil
 import os.path
 import base64
 import optparse
-
-__version__ = "0.3"
+import tkinter
+import time
+from tkinter import messagebox
+__version__ = "0.4"
 
 def b64encode(message):    
     message_bytes = message.encode('ascii')
@@ -23,6 +25,14 @@ def b64decode(base64_message):
     message = message_bytes.decode('ascii')
     return message
 
+def is_open(file_name):
+    if os.path.exists(file_name):
+        try:
+            os.rename(file_name, file_name) #can't rename an open file so an error will be thrown
+            return False
+        except:
+            return True
+    raise NameError
     
 class Folder:   
 
@@ -73,13 +83,12 @@ class BackupJob:
         self.backupRoot = os.path.join(backupPath, jobName)
         self.syncRoot = os.path.join(backupPath, jobName, 'sync')
         self.encRoot = os.path.join(backupPath, jobName, 'encrypt')
-        self.backupZipName = os.path.join(self.encRoot, self.jobName) \
-            + '.zip'
+        self.backupZipName = os.path.join(self.encRoot, self.jobName) + '.zip'
         self.mantainedBackupNumber = 1
         self.maxBackups = 3
         self.backupPassword = 'masterkey'
+        self.logPath = os.path.join(self.backupRoot,"backup_log.log")
         
-        #We do some file checking before starting the program.
         if not os.path.isdir(self.backupRoot):
             os.mkdir(self.backupRoot)
 
@@ -88,33 +97,13 @@ class BackupJob:
 
         if not os.path.isdir(self.encRoot):
             os.mkdir(self.encRoot)
+            
 
     def setMaxMaintainedBackupsNumber(self, num):
         self.maxBackups = num
 
     def setBackupPassword(self, password):
         self.backupPassword = password
-
-    def renameMantainedBackups(self): 
-        '''
-        This method is a "private" method of this class, it rename all the backups
-        contained in the folder.
-
-        Returns
-        -------
-        None.
-
-        '''
-        cartella = self.encRoot
-        a = os.listdir(cartella)
-        aClean = [i.split('_')[0] for i in a]
-        current = 0
-        for i in aClean:
-            aClean[current] = aClean[current] + '_' + str(current) \
-                + '.zip'
-            os.rename(os.path.join(cartella, a[current]),
-                      os.path.join(cartella, aClean[current]))
-            current = current + 1
 
     def setMantainedBackupNumber(self, num):
         self.mantainedBackupNumber = num
@@ -132,6 +121,7 @@ class BackupJob:
         self.sourceFolder.setMirrorPath(self.syncRoot)
         self.sourceFolder.createMirror()
 
+
     def cleanBackupFolder(self):
         '''
         This method cleans the backup folder, it uses the method 
@@ -143,13 +133,29 @@ class BackupJob:
         None.
 
         '''
-        a = os.listdir(self.encRoot)
-        if len(a) > self.maxBackups:
-            os.remove(os.path.join(self.encRoot, a[0]))
-            print ('Rimosso: ', os.path.join(self.encRoot, a[0]))
+        
+        cartella = self.encRoot
+        a = os.listdir(cartella)
+        if len(a) > self.maxBackups:    
+            aClean = [i.split('_') for i in a]
+            for item in aClean:
+                item[1] = item[1].replace(".zip","")
+                item[1] = int(item[1])
+            aClean = sorted(aClean, key=lambda a_entry: a_entry[1])
+            #first element → oldest element
+            actualFile = os.path.join(self.encRoot, a[0]) 
+            
+            #testing that file is not opened
+            while is_open(actualFile):
+                time.sleep(5)
+            try:                   
+                os.remove(actualFile)      
+            except:
+                payload = "Error in accessing file  " + actualFile + "\n Backup process skipped."
+                messagebox.showerror("Backup Error", payload )            
             del a[0]
-            self.renameMantainedBackups()
 
+            
     def getCurrentBackupNumber(self):
         '''
         This method returns the lastest backup number that has been saved.
@@ -166,14 +172,17 @@ class BackupJob:
         a.sort(key=lambda x: int(''.join(filter(str.isdigit, x))))
         lastNum = a[len(a) - 1].replace('.zip', '').split('_')[1]
         return int(lastNum)
+    
 
     def doBackup(self):
-        self.syncronize()
         self.cleanBackupFolder()
+        self.syncronize()        
+        current_milli_time = lambda: int(round(time.time() * 1000))
         protectFolder(self.syncRoot, 
                       b64decode(self.backupPassword),
-                      os.path.join(self.encRoot,self.jobName.replace('_0', '_'+ str(self.getCurrentBackupNumber() + 1) + '.zip'
+                      os.path.join(self.encRoot,self.jobName.replace('_0', '_'+ str(current_milli_time()) + '.zip'
                       )))
+      
 
 def main():
     '''
@@ -184,6 +193,9 @@ def main():
     None.
 
     '''
+    root = tkinter.Tk()
+    root.withdraw()
+
     parser = optparse.OptionParser()
     parser.add_option('-s', '--source', action="store", dest="source", help="Source folder of backup")
     parser.add_option('-d', '--dest', action="store", dest="dest", help="Destination folder of backup")
